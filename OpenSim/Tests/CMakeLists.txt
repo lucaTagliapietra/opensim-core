@@ -20,6 +20,7 @@ add_subdirectory(SimpleOptimizationExample)
 add_subdirectory(Environment)
 add_subdirectory(testIterators)
 add_subdirectory(VisualizeModel)
+add_subdirectory(MBSBenchmark)
 add_subdirectory(README)
 
 add_subdirectory(Wrapping)
