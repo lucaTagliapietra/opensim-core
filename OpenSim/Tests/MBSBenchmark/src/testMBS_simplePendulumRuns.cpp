@@ -86,5 +86,5 @@ int main(int argc, char **argv) {
   // Save simulation results
   OpenSim::IO::SetPrecision(15);
   simplePendulumModel.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
-  simplePendulumModel.updAnalysisSet().get("energyReporter").printResults("energy", "../", reportingStep);
+  simplePendulumModel.updAnalysisSet().get("energyReporter").printResults("simplePendulum_energy", "../", reportingStep);
  }

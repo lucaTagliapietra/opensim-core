@@ -24,8 +24,6 @@ using std::endl;
 
 #include "OpenSim/OpenSim.h"
 #include "OpenSim/Simulation/Model/SystemEnergyProbe.h"
-#include "simulationManager.h"
-#include "configurationInterpreter.h"
 
 int main(int argc, char **argv) {
   cout << "--------------------------------------------------------------------------------" << endl;
@@ -35,23 +33,18 @@ int main(int argc, char **argv) {
   cout << " Copyright (C) 2013-2015 Luca Tagliapietra, Michele Vivian, Elena Ceseracciu, and Monica Reggiani" << endl;
   cout << "--------------------------------------------------------------------------------" << endl;
 
-  if (argc != 2){
-    cout << " ******************************************************************************" << endl;
-    cout << " Multi-Body Systems Benchmark in Opensim: Simulator for Model A04" << endl;
-    cout << " Usage: ./BricardsMechanismSimulate dataDirectory" << endl;
-    cout << "       dataDirectory must contain a vtpFiles folder" << endl;
-    cout << " ******************************************************************************" << endl;
-    exit(EXIT_FAILURE);
-  }
-
-  const std::string dataDir = argv[1];
-  cout << "Input data directory: " << dataDir << endl;
-
-  const std::string outputDir = dataDir+"/SimulationResults";
-  const std::string integratorName = "CPodes";
+  //Simulation Parameters
+  const double initialTime = 0.0;
+  const double finalTime = 10.0;
+  const double accuracy = 1.0e-7;
+  const double tolerance = 1.0e-7;
+  const double minStepSize = 1.0e-3;
+  const double maxStepSize = 1.0e-2;
+  const double internalStepLimit = 2.0e5;
+  const double reportingStep = 1.0e-2;
 
   // Load the Opensim Model
-  OpenSim::Model bricardsMechanism((dataDir+"/BricardMechanism.osim").c_str());
+  OpenSim::Model bricardsMechanism("../BricardMechanism.osim");
 
   // Add System Energy Reporter
   OpenSim::SystemEnergyProbe *energyProbe = new OpenSim::SystemEnergyProbe(true, true);
@@ -66,33 +59,32 @@ int main(int argc, char **argv) {
   std::cout << energyReporter->getName() << std::endl;
   bricardsMechanism.addAnalysis(energyReporter);
 
-  // Add Force Reporter
-  OpenSim::ForceReporter *forceReporter = new OpenSim::ForceReporter(&bricardsMechanism);
-  forceReporter->setName(std::string("forceReporter"));
-  bricardsMechanism.addAnalysis(forceReporter);
+  //Initialize System State
+  SimTK::State initialState = bricardsMechanism.initSystem();
+  bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Position);
+  bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Velocity);
+  bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Acceleration);
+  bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
 
-  // Add Kinematics Reporter
-  OpenSim::PointKinematics *pointKinematicsReporter = new OpenSim::PointKinematics(&bricardsMechanism);
-  pointKinematicsReporter -> setBodyPoint(std::string("Link_2"), SimTK::Vec3(0,-0.5,0));
-  pointKinematicsReporter->setName(std::string("pointKinematicsReporter"));
-  pointKinematicsReporter ->setDescription("3d Kinematics of the point P3 (state_0 = X Displacement, state_1 = Y Displacement, state_2 = Z Displacement)");
-  bricardsMechanism.addAnalysis(pointKinematicsReporter);
+  //Create Integrator and set its parameters
+  SimTK::Integrator* integrator = new SimTK::CPodesIntegrator(bricardsMechanism.getMultibodySystem(), SimTK::CPodes::BDF);
+  integrator->setMaximumStepSize(maxStepSize);
+  integrator->setAccuracy(accuracy);
+  integrator->setConstraintTolerance(tolerance);
+  integrator->setProjectEveryStep(true);
+  integrator->setInternalStepLimit(internalStepLimit);
 
-  // Read the configuration Parameter File
-  std::map<std::string, double> parametersMap;
-  try{
-    const std::string cfgFilename = (dataDir+"/simulationParameters.txt");
-    configurationInterpreter cfg(cfgFilename.c_str());
-    cfg.getMap(parametersMap);
-  }
-  catch (std::exception& e){
-    std::cerr << e.what() << std::endl;
-    return -1;
-  }
+  // Create the manager for the integrator and set its parameters
+  OpenSim::Manager manager(bricardsMechanism, *integrator);
+  manager.setInitialTime(initialTime);
+  manager.setFinalTime(finalTime);
 
-  SimTK::State fakedInitialState;
-  simulationManager manager(fakedInitialState, bricardsMechanism, parametersMap, integratorName, outputDir);
-  manager.simulate();
+  // Perform the integration
+  manager.integrate(initialState);
+  
+  // Save simulation results
+  OpenSim::IO::SetPrecision(15);
+  bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
+  bricardsMechanism.updAnalysisSet().get("energyReporter").printResults("bricardsMechanism_energy", "../", reportingStep);
+ }
 
-  cout << "Simulation results stored in: " << outputDir << endl;
-}
