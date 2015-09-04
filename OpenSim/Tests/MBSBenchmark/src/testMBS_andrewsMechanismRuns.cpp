@@ -23,7 +23,7 @@
     using std::endl;
 #include "OpenSim/OpenSim.h"
 #include "OpenSim/Simulation/Model/SystemEnergyProbe.h"
-#include "DcMotorPIDController.h"
+#include "ConstantUnitController.h"
 
 
 int main(int argc, char **argv) {
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 
   //Simulation Parameters
   const double initialTime = 0.0;
-  const double finalTime = 0.5;
+  const double finalTime = 0.05;
   const double accuracy = 1.0e-8;
   const double tolerance = 1.0e-8;
   const double minStepSize = 1.0e-5;
@@ -47,19 +47,25 @@ int main(int argc, char **argv) {
   // Load the Opensim Model
   OpenSim::Model andrewsMechanism("../AndrewsMechanism.osim");
 
-  // Add motor and constant controller
+  // Add Point to Point Spring to the model
+  OpenSim::PointToPointSpring* spring = new OpenSim::PointToPointSpring( andrewsMechanism.getGround(),SimTK::Vec3(0.014,0.072,0),
+			       andrewsMechanism.getBodySet().get(std::string("BDE")), SimTK::Vec3(-0.035/2+0.018, 0.02,0),
+			       4530.0, 0.07785);
+  andrewsMechanism.addModelComponent(spring);
+
+  // Add motor and an unitary constant controller
   SimTK::Vec3 pointA(0,0,0);
   SimTK::Vec3 pointB(0,0,1);
   SimTK::Vec3 axis = pointA - pointB;
-  OpenSim::TorqueActuator *motor = new OpenSim::TorqueActuator(andrewsMechanism.updBodySet().get(std::string("OF")), andrewsMechanism.updBodySet().get(std::string("OF")),axis, true);
+  OpenSim::TorqueActuator *motor = new OpenSim::TorqueActuator(andrewsMechanism.getGround(), andrewsMechanism.getBodySet().get(std::string("OF")),axis, true);
   motor->setName("motor");
   motor->set_optimal_force(0.033);
   andrewsMechanism.addForce(motor);
 
-  int indexMotor = andrewsMechanism.updActuators().getIndex("motor");
-  DcMotorPIDController *constController = new DcMotorPIDController(andrewsMechanism, 0.0, 0.0, 0.0,indexMotor);
+  int indexMotor = andrewsMechanism.getActuators().getIndex("motor");
+  ConstantUnitController *constController = new ConstantUnitController();
   constController->setName("Constant Controller");
-  constController->setActuators(andrewsMechanism.updActuators());
+  constController->setActuators(andrewsMechanism.getActuators());
   andrewsMechanism.addController(constController);
 
   // Add System Energy Reporter
@@ -75,7 +81,7 @@ int main(int argc, char **argv) {
   std::cout << energyReporter->getName() << std::endl;
   andrewsMechanism.addAnalysis(energyReporter);
 
- //Initialize System State
+  //Initialize System State
   SimTK::State initialState = andrewsMechanism.initSystem();
   andrewsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Position);
   andrewsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Velocity);
@@ -83,7 +89,7 @@ int main(int argc, char **argv) {
   andrewsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
 
   //Create Integrator and set its parameters
-  SimTK::Integrator* integrator = new SimTK::RungeKuttaMersonIntegrator(andrewsMechanism.getMultibodySystem());
+  SimTK::Integrator* integrator = new SimTK::RungeKuttaFeldbergIntegrator(andrewsMechanism.getMultibodySystem());
   integrator->setMaximumStepSize(maxStepSize);
   integrator->setAccuracy(accuracy);
   integrator->setConstraintTolerance(tolerance);
@@ -97,7 +103,7 @@ int main(int argc, char **argv) {
 
   // Perform the integration
   manager.integrate(initialState);
-  
+
   // Save simulation results
   OpenSim::IO::SetPrecision(15);
   andrewsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Report);

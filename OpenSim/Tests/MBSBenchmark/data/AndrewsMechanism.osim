@@ -627,23 +627,6 @@
 		</ControllerSet>
 		<!--Additional components in the model.-->
 		<ComponentSet name="MiscComponents">
-			<objects>
-				<PointToPointSpring name="spring">
-					<!--Name of Body to which 1 end of the spring is attached.-->
-					<body1>ground</body1>
-					<!--Name of Body to which the 2nd end of the spring is attached.-->
-					<body2>BDE</body2>
-					<!--Force application point on body1.-->
-					<point1>0.014 0.072 0</point1>
-					<!--Force application point on body2.-->
-					<point2>0.000499999999999997 0.02 0</point2>
-					<!--Spring stiffness (N/m).-->
-					<stiffness>4530</stiffness>
-					<!--Spring resting length.-->
-					<rest_length>0.07785</rest_length>
-				</PointToPointSpring>
-			</objects>
-			<groups />
 		</ComponentSet>
 		<!--Probes in the model.-->
 		<ProbeSet>

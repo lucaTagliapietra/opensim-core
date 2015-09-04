@@ -24,22 +24,14 @@
 using namespace OpenSim;
 using namespace SimTK;
 
-double integral;
-bool firstRound;
-double speedReference;
-
-class DcMotorPIDController : public Controller {
-OpenSim_DECLARE_CONCRETE_OBJECT(DcMotorPIDController, Controller);
+class ConstantUnitController : public Controller {
+OpenSim_DECLARE_CONCRETE_OBJECT(ConstantUnitController, Controller);
 // This section contains methods that can be called in this controller class.
 
-//double integrator = 0.0;
 public:
-  DcMotorPIDController( Model& aModel, double aKp, double aKd, double aKi, int id) :
-	  Controller(), kp_(aKp), kd_(aKd), ki_(aKi), id_(id) {
-    integral=0.0;
-    speedReference=0.0;
-    firstRound=true;		}
-    /**
+  ConstantUnitController():Controller(){};
+
+  /**
     * This function is called at every time step for every actuator.
     *
     * @param s Current state of the system
@@ -47,17 +39,7 @@ public:
     * @return Control value to be assigned to the current actuator at the current time
     */
   virtual void computeControls( const SimTK::State& s, SimTK::Vector &controls ) const {
-    controls[id_] = 1.0;
+    for (int i = 0; i<controls.size(); ++i)
+      controls[i] = 1.0;
   }
-
-// This section contains the member variables of this controller class.
-private:
-	/** Position gain for this controller */
-	double kp_;
-	/** Derivative gain for this controller */
-	double kd_;
-	/** Integral gain for this controller */
-	double ki_;
-
-	int id_;
 };
