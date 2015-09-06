@@ -43,42 +43,53 @@ int main(int argc, char **argv) {
   const double internalStepLimit = 2.0e6;
   const double reportingStep = 1.0e-1;
 
-  // Load the Opensim Model
-  OpenSim::Model flyballGovernor("../FlyballGovernor.osim");
+  try {
+    // Load the Opensim Model
+    OpenSim::Model flyballGovernor("../FlyballGovernor.osim");
 
-  // Add Kinematics Reporter
-  OpenSim::PointKinematics *pointKinematicsReporter = new OpenSim::PointKinematics(&flyballGovernor);
-  pointKinematicsReporter -> setBodyPoint(std::string("base"), SimTK::Vec3(0,0,0));
-  pointKinematicsReporter->setName(std::string("pointKinematicsReporter"));
-  pointKinematicsReporter ->setDescription("3d Kinematics of the coordinate s (state_0 = X Displacement, state_1 = Y Displacement, state_2 = Z Displacement)");
-  flyballGovernor.addAnalysis(pointKinematicsReporter);
+    // Add Kinematics Reporter
+    OpenSim::PointKinematics *pointKinematicsReporter = new OpenSim::PointKinematics(&flyballGovernor);
+    pointKinematicsReporter -> setBodyPoint(std::string("base"), SimTK::Vec3(0,0,0));
+    pointKinematicsReporter->setName(std::string("pointKinematicsReporter"));
+    pointKinematicsReporter ->setDescription("3d Kinematics of the coordinate s (state_0 = X Displacement, state_1 = Y Displacement, state_2 = Z Displacement)");
+    flyballGovernor.addAnalysis(pointKinematicsReporter);
 
-  //Initialize System State
-  SimTK::State initialState = flyballGovernor.initSystem();
-  flyballGovernor.getMultibodySystem().realize(initialState, SimTK::Stage::Position);
-  flyballGovernor.getMultibodySystem().realize(initialState, SimTK::Stage::Velocity);
-  flyballGovernor.getMultibodySystem().realize(initialState, SimTK::Stage::Acceleration);
-  flyballGovernor.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
+    //Initialize System State
+    SimTK::State initialState = flyballGovernor.initSystem();
+    flyballGovernor.getMultibodySystem().realize(initialState, SimTK::Stage::Position);
+    flyballGovernor.getMultibodySystem().realize(initialState, SimTK::Stage::Velocity);
+    flyballGovernor.getMultibodySystem().realize(initialState, SimTK::Stage::Acceleration);
+    flyballGovernor.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
 
-  //Create Integrator and set its parameters
-  SimTK::Integrator* integrator = new SimTK::CPodesIntegrator(flyballGovernor.getMultibodySystem(), SimTK::CPodes::BDF);
-  integrator->setMaximumStepSize(maxStepSize);
-  integrator->setAccuracy(accuracy);
-  integrator->setConstraintTolerance(tolerance);
-  integrator->setProjectEveryStep(true);
-  integrator->setInternalStepLimit(internalStepLimit);
+    //Create Integrator and set its parameters
+    SimTK::Integrator* integrator = new SimTK::CPodesIntegrator(flyballGovernor.getMultibodySystem(), SimTK::CPodes::BDF);
+    integrator->setMaximumStepSize(maxStepSize);
+    integrator->setAccuracy(accuracy);
+    integrator->setConstraintTolerance(tolerance);
+    integrator->setProjectEveryStep(true);
+    integrator->setInternalStepLimit(internalStepLimit);
 
-  // Create the manager for the integrator and set its parameters
-  OpenSim::Manager manager(flyballGovernor, *integrator);
-  manager.setInitialTime(initialTime);
-  manager.setFinalTime(finalTime);
+    // Create the manager for the integrator and set its parameters
+    OpenSim::Manager manager(flyballGovernor, *integrator);
+    manager.setInitialTime(initialTime);
+    manager.setFinalTime(finalTime);
 
-  // Perform the integration
-  manager.integrate(initialState);
+    // Perform the integration
+    manager.integrate(initialState);
   
-  // Save simulation results
-  OpenSim::IO::SetPrecision(15);
-  flyballGovernor.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
-  flyballGovernor.updAnalysisSet().get("pointKinematicsReporter").printResults("flyballGovernor_kinematics", "../", reportingStep);
- }
-
+    // Save simulation results
+    OpenSim::IO::SetPrecision(15);
+    flyballGovernor.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
+    flyballGovernor.updAnalysisSet().get("pointKinematicsReporter").printResults("flyballGovernor_kinematics", "../", reportingStep);
+  }
+  catch (const std::exception& ex){
+    std::cerr << ex.what() << std::endl;
+    return 1;
+  }
+  catch (...){
+    std::cerr << "UNRECOGNIZED EXCEPTION" << std::endl;
+    return 1;
+  }
+  std::cout << "Simulation successfully completed." << std::endl;
+  return 0;
+}

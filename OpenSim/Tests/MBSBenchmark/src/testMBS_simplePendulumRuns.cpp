@@ -43,48 +43,60 @@ int main(int argc, char **argv) {
   const double internalStepLimit = 2.0e6;
   const double reportingStep = 1.0e-2;
 
-  // Load the Opensim Model
-  OpenSim::Model simplePendulumModel("../SimplePendulumMechanism.osim");
+  try {
+    // Load the Opensim Model
+    OpenSim::Model simplePendulumModel("../SimplePendulumMechanism.osim");
 
-  // Add System Energy Reporter
-  OpenSim::SystemEnergyProbe *energyProbe = new OpenSim::SystemEnergyProbe(true, true);
-  energyProbe->setName("SystemEnergy");
-  energyProbe->setGain(1.0);
-  energyProbe->setOperation("value");
-  energyProbe->setComputeKineticEnergy(true);
-  energyProbe->setComputePotentialEnergy(true);
-  simplePendulumModel.addProbe(energyProbe);
-  OpenSim::ProbeReporter *energyReporter = new OpenSim::ProbeReporter(&simplePendulumModel);
-  energyReporter->setName(std::string("energyReporter"));
-  std::cout << energyReporter->getName() << std::endl;
-  simplePendulumModel.addAnalysis(energyReporter);
-  simplePendulumModel.updAnalysisSet().get("energyReporter").setOn(true);
+    // Add System Energy Reporter
+    OpenSim::SystemEnergyProbe *energyProbe = new OpenSim::SystemEnergyProbe(true, true);
+    energyProbe->setName("SystemEnergy");
+    energyProbe->setGain(1.0);
+    energyProbe->setOperation("value");
+    energyProbe->setComputeKineticEnergy(true);
+    energyProbe->setComputePotentialEnergy(true);
+    simplePendulumModel.addProbe(energyProbe);
+    OpenSim::ProbeReporter *energyReporter = new OpenSim::ProbeReporter(&simplePendulumModel);
+    energyReporter->setName(std::string("energyReporter"));
+    std::cout << energyReporter->getName() << std::endl;
+    simplePendulumModel.addAnalysis(energyReporter);
+    simplePendulumModel.updAnalysisSet().get("energyReporter").setOn(true);
 
-  //Initialize System State
-  SimTK::State initialState = simplePendulumModel.initSystem();
-  simplePendulumModel.getMultibodySystem().realize(initialState, SimTK::Stage::Position);
-  simplePendulumModel.getMultibodySystem().realize(initialState, SimTK::Stage::Velocity);
-  simplePendulumModel.getMultibodySystem().realize(initialState, SimTK::Stage::Acceleration);
-  simplePendulumModel.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
+    //Initialize System State
+    SimTK::State initialState = simplePendulumModel.initSystem();
+    simplePendulumModel.getMultibodySystem().realize(initialState, SimTK::Stage::Position);
+    simplePendulumModel.getMultibodySystem().realize(initialState, SimTK::Stage::Velocity);
+    simplePendulumModel.getMultibodySystem().realize(initialState, SimTK::Stage::Acceleration);
+    simplePendulumModel.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
 
-  //Create Integrator and set its parameters
-  SimTK::Integrator* integrator = new SimTK::CPodesIntegrator(simplePendulumModel.getMultibodySystem(), SimTK::CPodes::BDF);
-  integrator->setMaximumStepSize(maxStepSize);
-  integrator->setAccuracy(accuracy);
-  integrator->setConstraintTolerance(tolerance);
-  integrator->setProjectEveryStep(true);
-  integrator->setInternalStepLimit(internalStepLimit);
+    //Create Integrator and set its parameters
+    SimTK::Integrator* integrator = new SimTK::CPodesIntegrator(simplePendulumModel.getMultibodySystem(), SimTK::CPodes::BDF);
+    integrator->setMaximumStepSize(maxStepSize);
+    integrator->setAccuracy(accuracy);
+    integrator->setConstraintTolerance(tolerance);
+    integrator->setProjectEveryStep(true);
+    integrator->setInternalStepLimit(internalStepLimit);
 
-  // Create the manager for the integrator and set its parameters
-  OpenSim::Manager manager(simplePendulumModel, *integrator);
-  manager.setInitialTime(initialTime);
-  manager.setFinalTime(finalTime);
+    // Create the manager for the integrator and set its parameters
+    OpenSim::Manager manager(simplePendulumModel, *integrator);
+    manager.setInitialTime(initialTime);
+    manager.setFinalTime(finalTime);
 
-  // Perform the integration
-  manager.integrate(initialState);
+    // Perform the integration
+    manager.integrate(initialState);
   
-  // Save simulation results
-  OpenSim::IO::SetPrecision(15);
-  simplePendulumModel.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
-  simplePendulumModel.updAnalysisSet().get("energyReporter").printResults("simplePendulum_energy", "../", reportingStep);
- }
+    // Save simulation results
+    OpenSim::IO::SetPrecision(15);
+    simplePendulumModel.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
+    simplePendulumModel.updAnalysisSet().get("energyReporter").printResults("simplePendulum_energy", "../", reportingStep);
+  }
+  catch (const std::exception& ex){
+    std::cerr << ex.what() << std::endl;
+    return 1;
+  }
+  catch (...){
+    std::cerr << "UNRECOGNIZED EXCEPTION" << std::endl;
+    return 1;
+  }
+  std::cout << "Simulation successfully completed." << std::endl;
+  return 0;
+}

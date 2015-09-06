@@ -43,48 +43,59 @@ int main(int argc, char **argv) {
   const double internalStepLimit = 2.0e5;
   const double reportingStep = 1.0e-2;
 
-  // Load the Opensim Model
-  OpenSim::Model bricardsMechanism("../BricardMechanism.osim");
+  try {
+    // Load the Opensim Model
+    OpenSim::Model bricardsMechanism("../BricardMechanism.osim");
 
-  // Add System Energy Reporter
-  OpenSim::SystemEnergyProbe *energyProbe = new OpenSim::SystemEnergyProbe(true, true);
-  energyProbe->setName("ener");
-  energyProbe->setGain(1.0);
-  energyProbe->setOperation("value");
-  energyProbe->setComputeKineticEnergy(true);
-  energyProbe->setComputePotentialEnergy(true);
-  bricardsMechanism.addProbe(energyProbe);
-  OpenSim::ProbeReporter *energyReporter = new OpenSim::ProbeReporter(&bricardsMechanism);
-  energyReporter->setName(std::string("energyReporter"));
-  std::cout << energyReporter->getName() << std::endl;
-  bricardsMechanism.addAnalysis(energyReporter);
+    // Add System Energy Reporter
+    OpenSim::SystemEnergyProbe *energyProbe = new OpenSim::SystemEnergyProbe(true, true);
+    energyProbe->setName("ener");
+    energyProbe->setGain(1.0);
+    energyProbe->setOperation("value");
+    energyProbe->setComputeKineticEnergy(true);
+    energyProbe->setComputePotentialEnergy(true);
+    bricardsMechanism.addProbe(energyProbe);
+    OpenSim::ProbeReporter *energyReporter = new OpenSim::ProbeReporter(&bricardsMechanism);
+    energyReporter->setName(std::string("energyReporter"));
+    std::cout << energyReporter->getName() << std::endl;
+    bricardsMechanism.addAnalysis(energyReporter);
 
-  //Initialize System State
-  SimTK::State initialState = bricardsMechanism.initSystem();
-  bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Position);
-  bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Velocity);
-  bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Acceleration);
-  bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
+    //Initialize System State
+    SimTK::State initialState = bricardsMechanism.initSystem();
+    bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Position);
+    bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Velocity);
+    bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Acceleration);
+    bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
 
-  //Create Integrator and set its parameters
-  SimTK::Integrator* integrator = new SimTK::CPodesIntegrator(bricardsMechanism.getMultibodySystem(), SimTK::CPodes::BDF);
-  integrator->setMaximumStepSize(maxStepSize);
-  integrator->setAccuracy(accuracy);
-  integrator->setConstraintTolerance(tolerance);
-  integrator->setProjectEveryStep(true);
-  integrator->setInternalStepLimit(internalStepLimit);
+    //Create Integrator and set its parameters
+    SimTK::Integrator* integrator = new SimTK::CPodesIntegrator(bricardsMechanism.getMultibodySystem(), SimTK::CPodes::BDF);
+    integrator->setMaximumStepSize(maxStepSize);
+    integrator->setAccuracy(accuracy);
+    integrator->setConstraintTolerance(tolerance);
+    integrator->setProjectEveryStep(true);
+    integrator->setInternalStepLimit(internalStepLimit);
 
-  // Create the manager for the integrator and set its parameters
-  OpenSim::Manager manager(bricardsMechanism, *integrator);
-  manager.setInitialTime(initialTime);
-  manager.setFinalTime(finalTime);
+    // Create the manager for the integrator and set its parameters
+    OpenSim::Manager manager(bricardsMechanism, *integrator);
+    manager.setInitialTime(initialTime);
+    manager.setFinalTime(finalTime);
 
-  // Perform the integration
-  manager.integrate(initialState);
+    // Perform the integration
+    manager.integrate(initialState);
   
-  // Save simulation results
-  OpenSim::IO::SetPrecision(15);
-  bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
-  bricardsMechanism.updAnalysisSet().get("energyReporter").printResults("bricardsMechanism_energy", "../", reportingStep);
- }
-
+    // Save simulation results
+    OpenSim::IO::SetPrecision(15);
+    bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
+    bricardsMechanism.updAnalysisSet().get("energyReporter").printResults("bricardsMechanism_energy", "../", reportingStep);
+  }
+  catch (const std::exception& ex){
+    std::cerr << ex.what() << std::endl;
+    return 1;
+  }
+  catch (...){
+    std::cerr << "UNRECOGNIZED EXCEPTION" << std::endl;
+    return 1;
+  }
+  std::cout << "Simulation successfully completed." << std::endl;
+  return 0;
+}
