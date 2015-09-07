@@ -56,10 +56,10 @@ int main(int argc, char **argv) {
     energyProbe->setComputePotentialEnergy(true);
     simplePendulumModel.addProbe(energyProbe);
     OpenSim::ProbeReporter *energyReporter = new OpenSim::ProbeReporter(&simplePendulumModel);
-    energyReporter->setName(std::string("energyReporter"));
+    energyReporter->setName(std::string("energy"));
     std::cout << energyReporter->getName() << std::endl;
     simplePendulumModel.addAnalysis(energyReporter);
-    simplePendulumModel.updAnalysisSet().get("energyReporter").setOn(true);
+    simplePendulumModel.updAnalysisSet().get("energy").setOn(true);
 
     //Initialize System State
     SimTK::State initialState = simplePendulumModel.initSystem();
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
     // Save simulation results
     OpenSim::IO::SetPrecision(15);
     simplePendulumModel.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
-    simplePendulumModel.updAnalysisSet().get("energyReporter").printResults("simplePendulum_energy", "../", reportingStep);
+    simplePendulumModel.updAnalysisSet().get("energy").printResults("simplePendulum", "../", reportingStep);
   }
   catch (const std::exception& ex){
     std::cerr << ex.what() << std::endl;

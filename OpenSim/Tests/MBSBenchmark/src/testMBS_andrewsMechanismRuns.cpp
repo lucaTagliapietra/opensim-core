@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
     energyProbe->setComputePotentialEnergy(true);
     andrewsMechanism.addProbe(energyProbe);
     OpenSim::ProbeReporter *energyReporter = new OpenSim::ProbeReporter(&andrewsMechanism);
-    energyReporter->setName(std::string("energyReporter"));
+    energyReporter->setName(std::string("energy"));
     std::cout << energyReporter->getName() << std::endl;
     andrewsMechanism.addAnalysis(energyReporter);
 
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
     // Save simulation results
     OpenSim::IO::SetPrecision(15);
     andrewsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
-    andrewsMechanism.updAnalysisSet().get("energyReporter").printResults("andrewsMechanism_energy", "../", reportingStep);
+    andrewsMechanism.updAnalysisSet().get("energy").printResults("andrewsMechanism", "../", reportingStep);
   }
   catch (const std::exception& ex){
     std::cerr << ex.what() << std::endl;

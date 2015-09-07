@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
     energyProbe->setComputePotentialEnergy(true);
     bricardsMechanism.addProbe(energyProbe);
     OpenSim::ProbeReporter *energyReporter = new OpenSim::ProbeReporter(&bricardsMechanism);
-    energyReporter->setName(std::string("energyReporter"));
+    energyReporter->setName(std::string("energy"));
     std::cout << energyReporter->getName() << std::endl;
     bricardsMechanism.addAnalysis(energyReporter);
 
@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
     // Save simulation results
     OpenSim::IO::SetPrecision(15);
     bricardsMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
-    bricardsMechanism.updAnalysisSet().get("energyReporter").printResults("bricardsMechanism_energy", "../", reportingStep);
+    bricardsMechanism.updAnalysisSet().get("energy").printResults("bricardsMechanism", "../", reportingStep);
   }
   catch (const std::exception& ex){
     std::cerr << ex.what() << std::endl;

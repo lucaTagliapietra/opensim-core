@@ -50,9 +50,10 @@ int main(int argc, char **argv) {
     // Add Kinematics Reporter
     OpenSim::PointKinematics *pointKinematicsReporter = new OpenSim::PointKinematics(&flyballGovernor);
     pointKinematicsReporter -> setBodyPoint(std::string("base"), SimTK::Vec3(0,0,0));
-    pointKinematicsReporter->setName(std::string("pointKinematicsReporter"));
+    pointKinematicsReporter->setName(std::string("kinematics"));
     pointKinematicsReporter ->setDescription("3d Kinematics of the coordinate s (state_0 = X Displacement, state_1 = Y Displacement, state_2 = Z Displacement)");
-    flyballGovernor.addAnalysis(pointKinematicsReporter);
+	pointKinematicsReporter->setPointName("S");
+	flyballGovernor.addAnalysis(pointKinematicsReporter);
 
     //Initialize System State
     SimTK::State initialState = flyballGovernor.initSystem();
@@ -80,7 +81,7 @@ int main(int argc, char **argv) {
     // Save simulation results
     OpenSim::IO::SetPrecision(15);
     flyballGovernor.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
-    flyballGovernor.updAnalysisSet().get("pointKinematicsReporter").printResults("flyballGovernor_kinematics", "../", reportingStep);
+    flyballGovernor.updAnalysisSet().get("kinematics").printResults("flyballGovernor", "../", reportingStep);
   }
   catch (const std::exception& ex){
     std::cerr << ex.what() << std::endl;

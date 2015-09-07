@@ -16,11 +16,11 @@ set (data_files data/AndrewsMechanism.osim
                 data/Geometry/cylinder.vtp
                 data/Geometry/sphere.vtp
                 data/Geometry/triangle.vtp
-                data/std_simplePendulum_energy_energyReporter_probes.sto
-                data/std_nFourBarMechanism_energy_energyReporter_probes.sto
-                data/std_andrewsMechanism_energy_energyReporter_probes.sto
-                data/std_bricardsMechanism_energy_energyReporter_probes.sto
-                data/std_flyballGovernor_kinematics_pointKinematicsReporter_NONAME_pos.sto
+                data/std_simplePendulum_energy_probes.sto
+                data/std_nFourBarMechanism_energy_probes.sto
+                data/std_andrewsMechanism_energy_probes.sto
+                data/std_bricardsMechanism_energy_probes.sto
+                data/std_flyballGovernor_kinematics_S_pos.sto
                 )
 
 file(COPY ${data_files} DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

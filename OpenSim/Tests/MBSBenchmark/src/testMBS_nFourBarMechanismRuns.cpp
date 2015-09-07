@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
     energyProbe->setComputePotentialEnergy(true);
     nFourBarMechanism.addProbe(energyProbe);
     OpenSim::ProbeReporter *energyReporter = new OpenSim::ProbeReporter(&nFourBarMechanism);
-    energyReporter->setName(std::string("energyReporter"));
+    energyReporter->setName(std::string("energy"));
     std::cout << energyReporter->getName() << std::endl;
     nFourBarMechanism.addAnalysis(energyReporter);
 
@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
     // Save simulation results
     OpenSim::IO::SetPrecision(15);
     nFourBarMechanism.getMultibodySystem().realize(initialState, SimTK::Stage::Report);
-    nFourBarMechanism.updAnalysisSet().get("energyReporter").printResults("nFourBarMechanism_energy", "../", reportingStep);
+    nFourBarMechanism.updAnalysisSet().get("energy").printResults("nFourBarMechanism", "../", reportingStep);
   }
   catch (const std::exception& ex){
     std::cerr << ex.what() << std::endl;
